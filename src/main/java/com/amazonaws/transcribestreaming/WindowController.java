@@ -212,7 +212,7 @@ public class WindowController {
                             System.out.println(transcript);
                             String displayText;
                             if (!firstResult.isPartial()) {
-                                finalTranscript += transcript + " ";
+                                finalTranscript += transcript + "\r\n\r\n";
                                 displayText = finalTranscript;
                             } else {
                                 displayText = finalTranscript + " " + transcript;
