@@ -19,8 +19,18 @@ package com.amazonaws.transcribestreaming;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.services.comprehend.ComprehendClient;
+import software.amazon.awssdk.services.comprehend.model.DetectSentimentRequest;
+import software.amazon.awssdk.services.comprehend.model.DetectSentimentResponse;
+import software.amazon.awssdk.services.comprehend.model.LanguageCode;
 
 public class TranscribeStreamingDemoApp extends Application {
+
+  private static final Logger log = LoggerFactory.getLogger(TranscribeStreamingDemoApp.class);
+
+  private static final ComprehendClient comprehend = ComprehendClient.create();
 
     @Override
     public void start(Stage primaryStage)  {
@@ -33,6 +43,30 @@ public class TranscribeStreamingDemoApp extends Application {
         });
         primaryStage.show();
 
+        Thread transcribing = new Thread(new Runnable() {
+          @Override
+          public void run() {
+            while (true) {
+              log.info("Waiting for finished sentences...");
+              try {
+                String phrase = windowController.pendingAnalysis.take();
+                log.debug("Analyzing {}", phrase);
+                final DetectSentimentResponse detectSentimentResponse = comprehend
+                    .detectSentiment(DetectSentimentRequest.builder()
+                        .languageCode(LanguageCode.EN)
+                        .text(phrase)
+                        .build());
+                log.debug("Response: {}", detectSentimentResponse);
+                log.debug("Response: {} / {}", detectSentimentResponse.sentiment(), detectSentimentResponse.sentimentScore());
+              } catch (InterruptedException e) {
+
+              }
+            }
+          }
+        });
+        transcribing.setDaemon(true);
+      transcribing.setName("Transcriber");
+      transcribing.start();
     }
 
     public static void main(String args[]) {

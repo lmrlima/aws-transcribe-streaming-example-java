@@ -17,6 +17,11 @@
 
 package com.amazonaws.transcribestreaming;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -57,6 +62,8 @@ public class WindowController {
     private CompletableFuture<Void> inProgressStreamingRequest;
     private String finalTranscript = "";
     private Stage primaryStage;
+
+    BlockingQueue<String> pendingAnalysis = new LinkedBlockingQueue<>();
 
     public WindowController(Stage primaryStage) {
         client = new TranscribeStreamingClientWrapper();
@@ -213,6 +220,7 @@ public class WindowController {
                             String displayText;
                             if (!firstResult.isPartial()) {
                                 finalTranscript += transcript + "\r\n\r\n";
+                                pendingAnalysis.add(transcript);
                                 displayText = finalTranscript;
                             } else {
                                 displayText = finalTranscript + " " + transcript;
